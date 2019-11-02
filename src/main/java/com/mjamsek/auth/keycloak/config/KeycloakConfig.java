@@ -49,6 +49,10 @@ public class KeycloakConfig {
         }
     }
     
+    /**
+     * Retrieve keycloak config
+     * @return object with configuration
+     */
     public static KeycloakConfig get() {
         return instance;
     }
@@ -116,14 +120,26 @@ public class KeycloakConfig {
         return Base64.getDecoder().decode(base64);
     }
     
+    /**
+     * Get realm id
+     * @return keycloak realm
+     */
     public String getRealm() {
         return realm;
     }
     
+    /**
+     * Get server url
+     * @return keycloak server url
+     */
     public String getAuthUrl() {
         return authUrl;
     }
     
+    /**
+     * Get client id
+     * @return keycloak client
+     */
     public String getClientId() {
         return clientId;
     }
@@ -132,6 +148,10 @@ public class KeycloakConfig {
         return publicKey;
     }
     
+    /**
+     * Get client secret
+     * @return keycloak client secret
+     */
     public String getClientSecret() {
         return clientSecret;
     }

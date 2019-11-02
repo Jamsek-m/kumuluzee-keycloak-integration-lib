@@ -20,6 +20,13 @@ public class KeycloakClient {
     private static String accessToken = null;
     private static KeycloakApi apiInstance = null;
     
+    /**
+     * Method for performing service calls to Keycloak server
+     * @param func code that will perform service call
+     * @param <T> Return type of service call
+     * @return result of service call
+     * @throws KeycloakException on failed service call
+     */
     public static <T> T callKeycloak(Function<String, T> func) throws KeycloakException {
         // if no token present, retrieve one, otherwise used cached one
         if (accessToken == null) {

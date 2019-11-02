@@ -5,18 +5,41 @@ import java.util.List;
 
 public class AuthContext {
     
+    /**
+     * User id, retrieved from JWT subject
+     */
     private String id;
     
+    /**
+     * Username, retrieved from JWT. By default field <tt>preferred_username</tt> is used,
+     * but it can be changed in configuration using key <tt>kc.claims.username</tt>
+     */
     private String username;
     
+    /**
+     * User email, retrieved from JWT. By default field <tt>email</tt> is used,
+     * but it can be changed in configuration using key <tt>kc.claims.email</tt>
+     */
     private String email;
     
+    /**
+     * User realm roles
+     */
     private List<String> realmRoles;
     
+    /**
+     * User client roles
+     */
     private MultivaluedMap<String, String> clientRoles;
     
+    /**
+     * User scopes
+     */
     private List<String> scopes;
     
+    /**
+     * Is true, when auth context is constructed
+     */
     private boolean authenticated;
     
     public static AuthContext empty() {
