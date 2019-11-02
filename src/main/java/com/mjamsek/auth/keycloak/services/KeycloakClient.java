@@ -68,7 +68,7 @@ public class KeycloakClient {
         if (KeycloakConfig.get().getService() != null) {
             try {
                 TokenResponse response = getApi().getServiceToken(KeycloakConfig.get().getRealm(), KeycloakConfig.get().getService().getAuthHeader(), KeycloakConfig.get().getService().getFormData());
-                log.log(Level.INFO, "Retrieved service token for client '{}'", KeycloakConfig.get().getClientId());
+                log.log(Level.INFO, "Retrieved service token for client '{0}'", KeycloakConfig.get().getClientId());
                 accessToken = response.getAccessToken();
                 return response.getAccessToken();
             } catch (WebApplicationException e) {
