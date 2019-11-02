@@ -1,5 +1,8 @@
 # KumuluzEE Keycloak integration library
 
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/Jamsek-m/kumuluzee-keycloak-integration-lib?sort=semver)
+[![GitHub license](https://img.shields.io/github/license/Jamsek-m/kumuluzee-keycloak-integration-lib)](https://github.com/Jamsek-m/kumuluzee-keycloak-integration-lib/blob/master/LICENSE)
+
 > Library for integration of Keycloak authentication with KumuluzEE framework
 
 ## Requirements
