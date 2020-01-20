@@ -21,9 +21,9 @@ public class TokenUtil {
     public static JsonWebToken verifyToken(String token) throws VerificationException {
         
         String keyId = getKeyId(token);
-        PublicKey publicKey = KeycloakConfig.get().createPublicKey(keyId);
+        PublicKey publicKey = KeycloakConfig.getInstance().createPublicKey(keyId);
     
-        TokenVerifier verifier = TokenVerifier.create(token, JsonWebToken.class)
+        TokenVerifier<?> verifier = TokenVerifier.create(token, JsonWebToken.class)
             .withChecks(TokenVerifier.SUBJECT_EXISTS_CHECK, TokenVerifier.IS_ACTIVE)
             .publicKey(publicKey);
     

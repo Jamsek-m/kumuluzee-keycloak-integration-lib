@@ -4,7 +4,7 @@ import com.kumuluz.ee.common.Extension;
 import com.kumuluz.ee.common.config.EeConfig;
 import com.kumuluz.ee.common.dependencies.*;
 import com.kumuluz.ee.common.wrapper.KumuluzServerWrapper;
-import com.mjamsek.auth.keycloak.config.KeycloakConfig;
+import com.mjamsek.auth.keycloak.config.KeycloakInitializator;
 
 import java.util.logging.Logger;
 
@@ -25,8 +25,7 @@ public class KeycloakAuthExtension implements Extension {
     
     @Override
     public void init(KumuluzServerWrapper kumuluzServerWrapper, EeConfig eeConfig) {
-        KeycloakConfig.initialize();
-    
+        KeycloakInitializator.getInstance().initializeConfiguration();
         log.info("Initialized security implemented by Keycloak.");
     }
 }

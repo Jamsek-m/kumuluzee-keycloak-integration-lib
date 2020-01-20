@@ -1,14 +1,13 @@
 package com.mjamsek.auth.keycloak.services.impl;
 
-import com.kumuluz.ee.configuration.utils.ConfigurationUtil;
 import com.mjamsek.auth.keycloak.annotations.*;
+import com.mjamsek.auth.keycloak.config.KeycloakConfig;
 import com.mjamsek.auth.keycloak.models.AuthContext;
+import com.mjamsek.auth.keycloak.payload.KeycloakJsonWebToken;
 import com.mjamsek.auth.keycloak.services.AuthService;
 import com.mjamsek.auth.keycloak.utils.AnnotationResult;
 import com.mjamsek.auth.keycloak.utils.AnnotationUtil;
-import com.mjamsek.auth.keycloak.utils.TokenUtil;
 import org.keycloak.common.VerificationException;
-import org.keycloak.representations.JsonWebToken;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -78,7 +77,6 @@ public class AuthServiceImpl implements AuthService {
         }
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     public AuthContext produceContext(String rawToken) {
         if (rawToken == null) {
@@ -87,34 +85,28 @@ public class AuthServiceImpl implements AuthService {
         if (rawToken.startsWith("Bearer")) {
             rawToken = rawToken.replace("Bearer ", "");
         }
-    
-        try {
-            JsonWebToken token = TokenUtil.verifyToken(rawToken);
         
+        try {
+            KeycloakJsonWebToken token = KeycloakConfig.getInstance().getVerifier().verifyToken(rawToken, KeycloakJsonWebToken.class);
+            
             AuthContext authContext = new AuthContext();
             authContext.setAuthenticated(true);
-        
+            
             authContext.setId(token.getSubject());
-            String usernameClaimName = ConfigurationUtil.getInstance().get("kc.claims.username").orElse("preferred_username");
-            authContext.setUsername((String) token.getOtherClaims().getOrDefault(usernameClaimName, ""));
-            String emailClaimName = ConfigurationUtil.getInstance().get("kc.claims.email").orElse("email");
-            authContext.setEmail((String) token.getOtherClaims().getOrDefault(emailClaimName, ""));
-        
-            String scopes = (String) token.getOtherClaims().getOrDefault("scope", "");
+            
+            authContext.setUsername(token.getPreferredUsername());
+            authContext.setEmail(token.getEmail());
+            
+            String scopes = token.getScopes();
             authContext.setScopes(Arrays.asList(scopes.split(" ")));
-        
-            Map<String, List<String>> realmAccess = (Map<String, List<String>>) token.getOtherClaims().getOrDefault("realm_access", new ArrayList());
-            List<String> realmRoles = realmAccess.getOrDefault("roles", new ArrayList<>());
+            
+            List<String> realmRoles = token.getRealmAccess().getRoles();
             authContext.setRealmRoles(realmRoles);
-        
-            Map<String, Map<String, List<String>>> resourceAccess = (Map<String, Map<String, List<String>>>) token.getOtherClaims().getOrDefault("resource_access", new HashMap<>());
+            
             authContext.setClientRoles(new MultivaluedHashMap<>());
-            resourceAccess.keySet().forEach(clientId -> {
-                Map<String, List<String>> clientAccess = resourceAccess.get(clientId);
-                List<String> clientRoles = clientAccess.getOrDefault("roles", new ArrayList<>());
-                authContext.getClientRoles().addAll(clientId, clientRoles);
-            });
-        
+            Map<String, KeycloakJsonWebToken.Roles> clientRolesMap = token.getResourceAccess();
+            clientRolesMap.keySet().forEach(clientId -> authContext.getClientRoles().addAll(clientId, clientRolesMap.get(clientId).getRoles()));
+            
             return authContext;
         } catch (VerificationException e) {
             return AuthContext.empty();
@@ -123,9 +115,10 @@ public class AuthServiceImpl implements AuthService {
     
     /**
      * Returns true if method is not explicitly public resource.
+     *
      * @param annotation annotation to be checked
-     * @param method executing method
-     * @param <T> auth annotation type
+     * @param method     executing method
+     * @param <T>        auth annotation type
      * @return true if method is not public
      */
     private <T> boolean isNotPublic(AnnotationResult<T> annotation, Method method) {
@@ -144,7 +137,7 @@ public class AuthServiceImpl implements AuthService {
     
     private void validateRealmRoles(String[] requiredRoles) throws NotAuthorizedException, ForbiddenException {
         this.validateAuthenticated();
-    
+        
         boolean hasRole = Set.of(requiredRoles).stream().anyMatch(role -> authContext.hasRealmRole(role));
         
         if (!hasRole) {
@@ -154,9 +147,9 @@ public class AuthServiceImpl implements AuthService {
     
     private void validateClientRoles(String clientId, String[] clientRoles) throws NotAuthorizedException, ForbiddenException {
         this.validateAuthenticated();
-    
+        
         boolean hasRole = Set.of(clientRoles).stream().anyMatch(role -> authContext.hasClientRole(clientId, role));
-    
+        
         if (!hasRole) {
             throw new ForbiddenException(Response.status(Response.Status.FORBIDDEN).build());
         }
@@ -169,12 +162,14 @@ public class AuthServiceImpl implements AuthService {
         try {
             this.validateRealmRoles(roles);
             realmRoleFound = true;
-        } catch (ForbiddenException ignored) { }
+        } catch (ForbiddenException ignored) {
+        }
         for (String clientId : authContext.getClientRoles().keySet()) {
             try {
                 this.validateClientRoles(clientId, roles);
                 clientRoleFound = true;
-            } catch (ForbiddenException ignored) { }
+            } catch (ForbiddenException ignored) {
+            }
         }
         
         if (!realmRoleFound && !clientRoleFound) {
