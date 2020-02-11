@@ -86,11 +86,11 @@ public class KeycloakClient {
         }
         
         try {
-            ServiceCallBeanParam params = new ServiceCallBeanParam();
-            params.setAuthorizationHeader(KeycloakConfig.ServiceCall.getAuthHeader());
-            params.setRealm(KeycloakConfig.getInstance().getRealm());
-            
-            TokenResponse response = getApi().getServiceToken(params, KeycloakConfig.ServiceCall.getFormData());
+            TokenResponse response = getApi().getServiceToken(
+                KeycloakConfig.getInstance().getRealm(),
+                KeycloakConfig.ServiceCall.getAuthHeader(),
+                KeycloakConfig.ServiceCall.getFormData()
+            );
             log.log(Level.INFO, "Retrieved service token for client '{0}'", KeycloakConfig.getInstance().getClientId());
             
             tokenRepresentation = new TokenRepresentation(response.getAccessToken());

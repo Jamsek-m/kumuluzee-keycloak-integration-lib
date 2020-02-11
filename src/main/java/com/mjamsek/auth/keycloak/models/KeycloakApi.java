@@ -14,7 +14,10 @@ public interface KeycloakApi {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/realms/{realm}/protocol/openid-connect/token")
-    TokenResponse getServiceToken(@BeanParam ServiceCallBeanParam beanParam, Form form);
+    TokenResponse getServiceToken(@PathParam("realm") String realm,
+                                  @HeaderParam("Authorization") String authorizationHeader,
+                                  Form form
+    );
     
     @GET
     @Path("/realms/{realm}/protocol/openid-connect/certs")
