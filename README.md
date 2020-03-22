@@ -168,6 +168,14 @@ public class AccountService {
 }
 ```
 
+## Known issues
+
+
+### 401 response
+
+On 401 response, Jetty throws ProcessingException, due to which response is not processed by registered mappers.
+
+
 ## Changelog
 
 Changes can be viewed on [releases page](https://github.com/Jamsek-m/kumuluzee-keycloak-integration-lib/releases) on GitHub.

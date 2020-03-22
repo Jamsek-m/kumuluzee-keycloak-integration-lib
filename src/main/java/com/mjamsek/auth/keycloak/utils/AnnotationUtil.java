@@ -42,13 +42,4 @@ public class AnnotationUtil {
         }
     }
     
-    public static AnnotationResult<ScopesAllowed> getScopesAllowedAnnotation(Method method) {
-        ScopesAllowed scopesAllowed = method.getDeclaredAnnotation(ScopesAllowed.class);
-        if (scopesAllowed == null) {
-            return new AnnotationResult<>(method.getDeclaringClass().getDeclaredAnnotation(ScopesAllowed.class), true);
-        } else {
-            return new AnnotationResult<>(scopesAllowed, false);
-        }
-    }
-    
 }

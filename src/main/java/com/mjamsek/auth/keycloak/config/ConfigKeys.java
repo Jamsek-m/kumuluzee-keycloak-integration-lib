@@ -9,6 +9,4 @@ public class ConfigKeys {
     public static final String SECRET_KEY = "keycloak.auth.secret-key";
     public static final String PUBLIC_CERT = "keycloak.auth.cert";
     public static final String ALGORITHM = "keycloak.auth.algorithm";
-    
-    public static final String CLAIMS = "keycloak.claims";
 }

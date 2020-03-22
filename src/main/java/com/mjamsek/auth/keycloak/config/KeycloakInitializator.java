@@ -2,8 +2,8 @@ package com.mjamsek.auth.keycloak.config;
 
 import com.kumuluz.ee.configuration.utils.ConfigurationUtil;
 import com.mjamsek.auth.keycloak.enums.VerificationAlgorithm;
-import com.mjamsek.auth.keycloak.models.KeycloakApi;
-import com.mjamsek.auth.keycloak.payload.KeycloakJsonWebToken;
+import com.mjamsek.auth.keycloak.apis.KeycloakApi;
+import com.mjamsek.auth.keycloak.exceptions.KeycloakConfigException;
 import com.mjamsek.auth.keycloak.utils.CertUtil;
 import com.mjamsek.auth.keycloak.verifiers.TokenVerifierBuilder;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
@@ -32,17 +32,23 @@ public class KeycloakInitializator {
         return instance;
     }
     
+    private KeycloakInitializator() {
+    
+    }
+    
     public void initializeConfiguration() {
         ConfigurationUtil configUtil = ConfigurationUtil.getInstance();
     
         KeycloakConfig config = KeycloakConfig.getInstance();
         
-        config.realm = configUtil.get(ConfigKeys.REALM_NAME).orElse(null);
-        config.authUrl = configUtil.get(ConfigKeys.SERVER_URL).orElse(null);
-        config.clientId = configUtil.get(ConfigKeys.CLIENT_ID).orElse(null);
+        config.realm = configUtil.get(ConfigKeys.REALM_NAME)
+            .orElseThrow(() -> new KeycloakConfigException("Missing 'realm' key!"));
+        config.authUrl = configUtil.get(ConfigKeys.SERVER_URL)
+            .orElseThrow(() -> new KeycloakConfigException("Missing 'auth-server-url' key!"));
+        config.clientId = configUtil.get(ConfigKeys.CLIENT_ID)
+            .orElseThrow(() -> new KeycloakConfigException("Missing 'client-id' key!"));
         config.clientSecret = configUtil.get(ConfigKeys.CLIENT_SECRET).orElse(null);
         config.leeway = configUtil.getInteger(ConfigKeys.TOKEN_LEEWAY).orElse(1000);
-        config.claimMappings = getClaimMapping();
         
         // parse algorithm
         VerificationAlgorithm algorithm;
@@ -79,7 +85,7 @@ public class KeycloakInitializator {
             KeycloakConfig.getInstance().publicKey = CertUtil.getPublicKeyFromCertificate(value);
         });
         // set verifier strategy based on algorithm
-        config.verifier = TokenVerifierBuilder.<KeycloakJsonWebToken>create(algorithm);
+        config.verifier = TokenVerifierBuilder.create(algorithm);
         
         // if public cert is not provided, retrieve it from server
         if (config.publicKey == null && algorithm.equals(VerificationAlgorithm.RS265)) {
@@ -87,18 +93,6 @@ public class KeycloakInitializator {
             // async
             retrievePublicKeyFromServer();
         }
-    }
-    
-    private Map<String, String> getClaimMapping() {
-        ConfigurationUtil configUtil = ConfigurationUtil.getInstance();
-        Map<String, String> mappings = new HashMap<>();
-        
-        Optional<List<String>> providedMappings = configUtil.getMapKeys(ConfigKeys.CLAIMS);
-        providedMappings.ifPresent(mapKeys -> mapKeys.forEach(mapKey -> {
-            Optional<String> providedMap = configUtil.get(ConfigKeys.CLAIMS + "." + mapKey);
-            providedMap.ifPresent(mapping -> mappings.put(mapKey, mapping));
-        }));
-        return mappings;
     }
     
     private static void retrievePublicKeyFromServer() {

@@ -8,11 +8,12 @@ import com.mjamsek.auth.keycloak.config.KeycloakInitializator;
 
 import java.util.logging.Logger;
 
-@EeExtensionDef(name = "keycloak-mj", group = EeExtensionGroup.SECURITY)
+@EeExtensionDef(name = "Keycloak", group = EeExtensionGroup.SECURITY)
 @EeComponentDependencies({
     @EeComponentDependency(EeComponentType.SERVLET),
     @EeComponentDependency(EeComponentType.CDI),
-    @EeComponentDependency(EeComponentType.JAX_RS)
+    @EeComponentDependency(EeComponentType.JAX_RS),
+    @EeComponentDependency(EeComponentType.JSON_B),
 })
 public class KeycloakAuthExtension implements Extension {
     
@@ -25,6 +26,14 @@ public class KeycloakAuthExtension implements Extension {
     
     @Override
     public void init(KumuluzServerWrapper kumuluzServerWrapper, EeConfig eeConfig) {
+    
+        try {
+            Class.forName("org.eclipse.microprofile.rest.client.inject.RestClient");
+        } catch (ClassNotFoundException e) {
+            log.severe("MP Rest Client implementation not found, please include it as a dependency. " +
+                "The extension may not work as expected.");
+        }
+        
         KeycloakInitializator.getInstance().initializeConfiguration();
         log.info("Initialized security implemented by Keycloak.");
     }

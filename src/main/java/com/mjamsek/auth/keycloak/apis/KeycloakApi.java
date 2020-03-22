@@ -1,4 +1,8 @@
-package com.mjamsek.auth.keycloak.models;
+package com.mjamsek.auth.keycloak.apis;
+
+import com.mjamsek.auth.keycloak.exceptions.KeycloakCallException;
+import com.mjamsek.auth.keycloak.models.TokenResponse;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 
 import javax.json.JsonObject;
 import javax.ws.rs.*;
@@ -8,6 +12,8 @@ import java.util.concurrent.CompletionStage;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RegisterProvider(AuthenticationExceptionMapper.class)
+@RegisterProvider(GenericExceptionMapper.class)
 public interface KeycloakApi {
     
     @POST
@@ -17,7 +23,7 @@ public interface KeycloakApi {
     TokenResponse getServiceToken(@PathParam("realm") String realm,
                                   @HeaderParam("Authorization") String authorizationHeader,
                                   Form form
-    );
+    ) throws KeycloakCallException;
     
     @GET
     @Path("/realms/{realm}/protocol/openid-connect/certs")

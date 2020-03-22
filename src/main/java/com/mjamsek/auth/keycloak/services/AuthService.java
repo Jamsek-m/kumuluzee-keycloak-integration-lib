@@ -1,6 +1,6 @@
 package com.mjamsek.auth.keycloak.services;
 
-import com.mjamsek.auth.keycloak.models.AuthContext;
+import com.mjamsek.auth.keycloak.context.AuthContext;
 
 import javax.interceptor.InvocationContext;
 

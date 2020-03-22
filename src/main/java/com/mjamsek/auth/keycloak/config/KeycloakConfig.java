@@ -9,8 +9,6 @@ import javax.ws.rs.core.Form;
 import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
 public class KeycloakConfig {
     
@@ -29,7 +27,6 @@ public class KeycloakConfig {
     KeyMeta keyMeta;
     
     TokenVerifier<KeycloakJsonWebToken> verifier;
-    Map<String, String> claimMappings;
     
     /**
      * Retrieve keycloak config
@@ -40,6 +37,10 @@ public class KeycloakConfig {
             instance = new KeycloakConfig();
         }
         return instance;
+    }
+    
+    private KeycloakConfig() {
+    
     }
     
     /**
@@ -120,14 +121,6 @@ public class KeycloakConfig {
      */
     public synchronized Integer getLeeway() {
         return leeway;
-    }
-    
-    /**
-     * Get mapped claims
-     * @return map of mappings
-     */
-    public Map<String, String> getClaimMappings() {
-        return claimMappings;
     }
     
     public static class KeyMeta {

@@ -1,52 +1,57 @@
-package com.mjamsek.auth.keycloak.models;
+package com.mjamsek.auth.keycloak.context;
 
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.List;
+import java.util.Map;
 
 public class AuthContext {
     
     /**
      * User id, retrieved from JWT subject
      */
-    private String id;
+    String id;
     
     /**
      * Username, retrieved from JWT. By default field <tt>preferred_username</tt> is used,
      * but it can be changed in configuration using key <tt>kc.claims.username</tt>
      */
-    private String username;
+    String username;
     
     /**
      * User email, retrieved from JWT. By default field <tt>email</tt> is used,
      * but it can be changed in configuration using key <tt>kc.claims.email</tt>
      */
-    private String email;
+    String email;
     
     /**
      * User realm roles
      */
-    private List<String> realmRoles;
+    List<String> realmRoles;
     
     /**
      * User client roles
      */
-    private MultivaluedMap<String, String> clientRoles;
+    MultivaluedMap<String, String> clientRoles;
     
     /**
      * User scopes
      */
-    private List<String> scopes;
+    List<String> scopes;
     
     /**
      * Is true, when auth context is constructed
      */
-    private boolean authenticated;
+    boolean authenticated;
     
-    public static AuthContext empty() {
-        AuthContext context = new AuthContext();
-        context.authenticated = false;
-        return context;
-    }
+    /**
+     * Map of all other claims
+     */
+    Map<String, Object> claims;
+    
+    /**
+     * Raw JWT token
+     */
+    String rawToken;
     
     public boolean hasRealmRole(String role) {
         return realmRoles.contains(role);
@@ -75,6 +80,10 @@ public class AuthContext {
         return false;
     }
     
+    public boolean hasClaim(String claim) {
+        return claims.containsKey(claim);
+    }
+    
     public List<String> getClientRoles(String clientId) {
         if (clientRoles.containsKey(clientId)) {
             return clientRoles.get(clientId);
@@ -86,55 +95,35 @@ public class AuthContext {
         return id;
     }
     
-    public void setId(String id) {
-        this.id = id;
-    }
-    
     public String getUsername() {
         return username;
-    }
-    
-    public void setUsername(String username) {
-        this.username = username;
     }
     
     public String getEmail() {
         return email;
     }
     
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    
     public List<String> getRealmRoles() {
         return realmRoles;
-    }
-    
-    public void setRealmRoles(List<String> realmRoles) {
-        this.realmRoles = realmRoles;
     }
     
     public MultivaluedMap<String, String> getClientRoles() {
         return clientRoles;
     }
     
-    public void setClientRoles(MultivaluedMap<String, String> clientRoles) {
-        this.clientRoles = clientRoles;
-    }
-    
     public List<String> getScopes() {
         return scopes;
-    }
-    
-    public void setScopes(List<String> scopes) {
-        this.scopes = scopes;
     }
     
     public boolean isAuthenticated() {
         return authenticated;
     }
     
-    public void setAuthenticated(boolean authenticated) {
-        this.authenticated = authenticated;
+    public Map<String, Object> getClaims() {
+        return claims;
+    }
+    
+    public String getRawToken() {
+        return rawToken;
     }
 }

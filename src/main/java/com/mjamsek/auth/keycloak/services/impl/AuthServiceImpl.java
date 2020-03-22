@@ -2,11 +2,13 @@ package com.mjamsek.auth.keycloak.services.impl;
 
 import com.mjamsek.auth.keycloak.annotations.*;
 import com.mjamsek.auth.keycloak.config.KeycloakConfig;
-import com.mjamsek.auth.keycloak.models.AuthContext;
+import com.mjamsek.auth.keycloak.context.AuthContext;
+import com.mjamsek.auth.keycloak.context.AuthContextBuilder;
 import com.mjamsek.auth.keycloak.payload.KeycloakJsonWebToken;
 import com.mjamsek.auth.keycloak.services.AuthService;
 import com.mjamsek.auth.keycloak.utils.AnnotationResult;
 import com.mjamsek.auth.keycloak.utils.AnnotationUtil;
+import com.mjamsek.auth.keycloak.utils.TokenUtil;
 import org.keycloak.common.VerificationException;
 
 import javax.enterprise.context.RequestScoped;
@@ -17,9 +19,13 @@ import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RequestScoped
 public class AuthServiceImpl implements AuthService {
@@ -57,19 +63,11 @@ public class AuthServiceImpl implements AuthService {
                         );
                     }
                 } else {
-                    AnnotationResult<ScopesAllowed> scopesAllowed = AnnotationUtil.getScopesAllowedAnnotation(context.getMethod());
-                    if (scopesAllowed.hasAnnotation()) {
-                        ScopesAllowed scopesAllowedAnnotation = scopesAllowed.getAnnotation();
-                        if (this.isNotPublic(scopesAllowed, context.getMethod())) {
-                            this.validateScopes(scopesAllowedAnnotation.value());
-                        }
-                    } else {
-                        AnnotationResult<AuthenticatedAllowed> authenticatedAllowed = AnnotationUtil
-                            .getAuthenticatedAllowedAnnotation(context.getMethod());
-                        if (authenticatedAllowed.hasAnnotation()) {
-                            if (this.isNotPublic(authenticatedAllowed, context.getMethod())) {
-                                this.validateAuthenticated();
-                            }
+                    AnnotationResult<AuthenticatedAllowed> authenticatedAllowed = AnnotationUtil
+                        .getAuthenticatedAllowedAnnotation(context.getMethod());
+                    if (authenticatedAllowed.hasAnnotation()) {
+                        if (this.isNotPublic(authenticatedAllowed, context.getMethod())) {
+                            this.validateAuthenticated();
                         }
                     }
                 }
@@ -78,38 +76,38 @@ public class AuthServiceImpl implements AuthService {
     }
     
     @Override
-    public AuthContext produceContext(String rawToken) {
+    public AuthContext produceContext(String authorizationHeader) {
+        String rawToken = TokenUtil.trimAuthHeader(authorizationHeader);
         if (rawToken == null) {
-            return AuthContext.empty();
-        }
-        if (rawToken.startsWith("Bearer")) {
-            rawToken = rawToken.replace("Bearer ", "");
+            return AuthContextBuilder.empty();
         }
         
         try {
             KeycloakJsonWebToken token = KeycloakConfig.getInstance().getVerifier().verifyToken(rawToken, KeycloakJsonWebToken.class);
-            
-            AuthContext authContext = new AuthContext();
-            authContext.setAuthenticated(true);
-            
-            authContext.setId(token.getSubject());
-            
-            authContext.setUsername(token.getPreferredUsername());
-            authContext.setEmail(token.getEmail());
+    
+            AuthContextBuilder authContextBuilder = AuthContextBuilder
+                .newBuilder()
+                .authenticated(true)
+                .id(token.getSubject())
+                .username(token.getPreferredUsername())
+                .email(token.getEmail())
+                .claims(token.getOtherClaims())
+                .token(rawToken);
             
             String scopes = token.getScopes();
-            authContext.setScopes(Arrays.asList(scopes.split(" ")));
+            authContextBuilder.scopes(Arrays.asList(scopes.split(" ")));
             
             List<String> realmRoles = token.getRealmAccess().getRoles();
-            authContext.setRealmRoles(realmRoles);
-            
-            authContext.setClientRoles(new MultivaluedHashMap<>());
+            authContextBuilder.realmRoles(realmRoles);
+    
+            MultivaluedMap<String, String> clientRoles = new MultivaluedHashMap<>();
             Map<String, KeycloakJsonWebToken.Roles> clientRolesMap = token.getResourceAccess();
-            clientRolesMap.keySet().forEach(clientId -> authContext.getClientRoles().addAll(clientId, clientRolesMap.get(clientId).getRoles()));
+            clientRolesMap.keySet().forEach(clientId -> clientRoles.addAll(clientId, clientRolesMap.get(clientId).getRoles()));
+            authContextBuilder.clientRoles(clientRoles);
             
-            return authContext;
+            return authContextBuilder.build();
         } catch (VerificationException e) {
-            return AuthContext.empty();
+            return AuthContextBuilder.empty();
         }
     }
     
@@ -173,16 +171,6 @@ public class AuthServiceImpl implements AuthService {
         }
         
         if (!realmRoleFound && !clientRoleFound) {
-            throw new ForbiddenException(Response.status(Response.Status.FORBIDDEN).build());
-        }
-    }
-    
-    private void validateScopes(String[] requiredScopes) throws NotAuthorizedException, ForbiddenException {
-        this.validateAuthenticated();
-        
-        boolean hasScope = Set.of(requiredScopes).stream().anyMatch(scope -> authContext.hasScope(scope));
-        
-        if (!hasScope) {
             throw new ForbiddenException(Response.status(Response.Status.FORBIDDEN).build());
         }
     }

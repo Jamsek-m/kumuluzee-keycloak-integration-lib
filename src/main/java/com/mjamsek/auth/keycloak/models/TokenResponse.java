@@ -1,33 +1,33 @@
 package com.mjamsek.auth.keycloak.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.json.bind.annotation.JsonbNillable;
+import javax.json.bind.annotation.JsonbProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonbNillable
 public class TokenResponse {
 
-    @JsonProperty("access_token")
+    @JsonbProperty("access_token")
     private String accessToken;
     
-    @JsonProperty("expires_in")
+    @JsonbProperty("expires_in")
     private Integer expiresIn;
     
-    @JsonProperty("refresh_expires_in")
+    @JsonbProperty("refresh_expires_in")
     private Integer refreshExpiresIn;
     
-    @JsonProperty("refresh_token")
+    @JsonbProperty("refresh_token")
     private String refreshToken;
     
-    @JsonProperty("token_type")
+    @JsonbProperty("token_type")
     private String tokenType;
     
-    @JsonProperty("not-before-policy")
+    @JsonbProperty("not-before-policy")
     private Integer notBeforePolicy;
     
-    @JsonProperty("session_state")
+    @JsonbProperty("session_state")
     private String sessionState;
     
-    @JsonProperty("scope")
+    @JsonbProperty("scope")
     private String scope;
     
     public String getAccessToken() {

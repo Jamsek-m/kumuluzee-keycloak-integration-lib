@@ -1,16 +1,13 @@
 package com.mjamsek.auth.keycloak.annotations;
 
-import javax.enterprise.util.Nonbinding;
+import javax.inject.Qualifier;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Allow only authenticated users with scope to access annotated method
- */
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Qualifier
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ScopesAllowed {
-    @Nonbinding String[] value() default {};
+public @interface Token {
 }
