@@ -1,5 +1,7 @@
 package com.mjamsek.auth.keycloak.client;
 
+import com.mjamsek.auth.keycloak.apis.AuthenticationExceptionMapper;
+import com.mjamsek.auth.keycloak.apis.GenericExceptionMapper;
 import com.mjamsek.auth.keycloak.apis.KeycloakApi;
 import com.mjamsek.auth.keycloak.config.KeycloakConfig;
 import com.mjamsek.auth.keycloak.exceptions.KeycloakCallException;
@@ -61,6 +63,8 @@ public class KeycloakClient {
             KeycloakApi api = RestClientBuilder
                 .newBuilder()
                 .baseUri(URI.create(KeycloakConfig.getInstance().getAuthUrl()))
+                .register(AuthenticationExceptionMapper.class)
+                .register(GenericExceptionMapper.class)
                 .build(KeycloakApi.class);
             
             TokenResponse response = api.getServiceToken(

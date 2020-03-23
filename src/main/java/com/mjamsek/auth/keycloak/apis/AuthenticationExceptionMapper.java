@@ -21,7 +21,7 @@ public class AuthenticationExceptionMapper implements ResponseExceptionMapper<Ke
     public KeycloakCallException toThrowable(Response response) {
         if (response.hasEntity()) {
             KeycloakErrorResponse error = response.readEntity(KeycloakErrorResponse.class);
-            if (error.getErrorDescription() != null && error.getErrorDescription().isBlank()) {
+            if (error.getErrorDescription() != null && !error.getErrorDescription().isBlank()) {
                 return new KeycloakCallException(error.getErrorDescription());
             }
             return new KeycloakCallException("Unknown Keycloak error! Response code: " + error.getErrorCode());
