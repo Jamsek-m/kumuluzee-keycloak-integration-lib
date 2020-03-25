@@ -6,7 +6,7 @@
 
     <groupId>com.mjamsek.auth</groupId>
     <artifactId>kumuluzee-keycloak-integration-lib</artifactId>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.2.1</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -86,7 +86,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
