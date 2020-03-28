@@ -33,16 +33,13 @@ public class KeycloakClient {
      * @throws KeycloakCallException on failed service call
      */
     public static <T> T callKeycloak(Function<String, T> func) throws KeycloakCallException {
-        // if no token present, retrieve one, otherwise used cached one
+        // if no token present, retrieve one, otherwise use cached one
         if (tokenCache.get() == null) {
-            log.fine("Client has no previous service token, retrieving new one.");
-            tokenCache.set(getServiceToken());
+            getServiceToken();
         }
         // if token is expired
-        KeycloakJsonWebToken jsonWebToken = tokenCache.get().parsedToken;
-        if (!jsonWebToken.isActive(KeycloakConfig.getInstance().getLeeway())) {
-            log.fine("Stored service token is expired, retrieving new one.");
-            tokenCache.set(getServiceToken());
+        if (!tokenIsActive()) {
+            getServiceToken();
         }
         
         // call requested function
@@ -53,12 +50,26 @@ public class KeycloakClient {
         }
     }
     
-    private static TokenRepresentation getServiceToken() throws KeycloakCallException {
+    @SuppressWarnings("UnusedReturnValue")
+    public static String getServiceToken() throws KeycloakCallException {
         if (KeycloakConfig.getInstance().getClientSecret() == null) {
             log.severe("Client secret not provided, cannot perform service call!");
             throw new KeycloakConfigException("Client secret not provided!");
         }
+    
+        // Check if token is cached
+        if (tokenCache.get() != null) {
+            // Check if token is expired
+            if (tokenIsActive()) {
+                return tokenCache.get().rawToken;
+            } else {
+                log.fine("Stored service token is expired, retrieving new one.");
+            }
+        } else {
+            log.fine("Client has no cached service token, retrieving new one.");
+        }
         
+        // If there is no cached valid token, retrieve new one
         try {
             KeycloakApi api = RestClientBuilder
                 .newBuilder()
@@ -66,7 +77,7 @@ public class KeycloakClient {
                 .register(AuthenticationExceptionMapper.class)
                 .register(GenericExceptionMapper.class)
                 .build(KeycloakApi.class);
-            
+        
             TokenResponse response = api.getServiceToken(
                 KeycloakConfig.getInstance().getRealm(),
                 KeycloakConfig.ServiceCall.getAuthHeader(),
@@ -74,7 +85,10 @@ public class KeycloakClient {
             );
             log.log(Level.INFO, "Retrieved service token for confidential client ''{0}''", KeycloakConfig.getInstance().getClientId());
             
-            return new TokenRepresentation(response.getAccessToken());
+            // Store received token in cache
+            tokenCache.set(new TokenRepresentation(response.getAccessToken()));
+            
+            return response.getAccessToken();
         } catch (KeycloakCallException e) {
             log.severe(e.getMessage());
             throw e;
@@ -82,6 +96,11 @@ public class KeycloakClient {
             log.severe(e.getMessage());
             throw new KeycloakCallException("Error verifying received service token!", e);
         }
+    }
+    
+    private static boolean tokenIsActive() {
+        KeycloakJsonWebToken jsonWebToken = tokenCache.get().parsedToken;
+        return jsonWebToken.isActive(KeycloakConfig.getInstance().getLeeway());
     }
     
     static class TokenRepresentation {
