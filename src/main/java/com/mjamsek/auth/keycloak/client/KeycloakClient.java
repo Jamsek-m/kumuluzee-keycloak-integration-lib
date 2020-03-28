@@ -80,7 +80,6 @@ public class KeycloakClient {
         
             TokenResponse response = api.getServiceToken(
                 KeycloakConfig.getInstance().getRealm(),
-                KeycloakConfig.ServiceCall.getAuthHeader(),
                 KeycloakConfig.ServiceCall.getFormData()
             );
             log.log(Level.INFO, "Retrieved service token for confidential client ''{0}''", KeycloakConfig.getInstance().getClientId());
