@@ -16,7 +16,7 @@
         <kumuluzee.version>3.9.0</kumuluzee.version>
         <kumuluzee-rest-client.version>1.4.1</kumuluzee-rest-client.version>
         <keycloak.version>7.0.1</keycloak.version>
-        <jackson.version>2.9.10.4</jackson.version>
+        <jackson.version>2.10.0.pr1</jackson.version>
     </properties>
 
     <dependencyManagement>
